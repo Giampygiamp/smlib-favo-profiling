@@ -1,0 +1,55 @@
+celle 300
+celle non costruite: 6
+costruzione celle 8.1 s
+guscio 2569977.392529124 2
+  10/294  +0.14 s  faces=104
+  scartata 10
+  scartata 17
+  20/294  +0.24 s  faces=188
+  scartata 24
+  30/294  +0.37 s  faces=278
+  scartata 31
+  40/294  +0.49 s  faces=368
+  scartata 42
+  50/294  +0.59 s  faces=455
+  scartata 51
+  scartata 55
+  scartata 56
+  60/294  +0.96 s  faces=524
+  70/294  +0.92 s  faces=624
+  scartata 79
+  80/294  +1.32 s  faces=715
+  scartata 83
+  90/294  +1.30 s  faces=804
+  scartata 91
+  scartata 94
+  scartata 97
+  100/294  +1.44 s  faces=869
+  scartata 100
+  scartata 102
+  110/294  +1.58 s  faces=947
+  120/294  +1.79 s  faces=1046
+  scartata 127
+  130/294  +2.07 s  faces=1135
+  140/294  +2.14 s  faces=1238
+  scartata 149
+  150/294  +2.04 s  faces=1329
+  160/294  +2.27 s  faces=1427
+  170/294  +2.58 s  faces=1527
+  scartata 171
+  180/294  +2.61 s  faces=1615
+  190/294  +2.62 s  faces=1716
+  200/294  +2.76 s  faces=1816
+  210/294  +3.07 s  faces=1915
+  220/294  +3.31 s  faces=2012
+  230/294  +3.59 s  faces=2112
+  scartata 237
+  240/294  +3.64 s  faces=2203
+  250/294  +3.63 s  faces=2306
+  260/294  +4.04 s  faces=2405
+  scartata 269
+  270/294  +4.31 s  faces=2492
+  280/294  +3.97 s  faces=2587
+  scartata 288
+  290/294  +4.31 s  faces=2677
+tasche 65.8 s  scartate 21  volume 2394459  facce 2713

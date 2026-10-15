@@ -1,0 +1,94 @@
+--- a/source/SMLib/src/SmLoop.cpp	2026-10-14 18:14:00.547575852 +0200
++++ b/source/SMLib/src/SmLoop.cpp	2026-10-14 23:59:25.229797228 +0200
+@@ -7,6 +7,7 @@
+ **********************************************************************/
+ 
+ #include "StdAfx.h"
++#include <cstdlib>
+ 
+ #include <SmLoop.h>
+ 
+@@ -636,6 +637,44 @@
+ 
+     } // end UVPoint was on a surface pole shared by this loop check                                   
+ 
++  // EXPERIMENT (profiling study, not upstream): quick reject for "island" loops.
++  // If the loop's UV trim curves (control-polygon boxes, conservative) lie strictly inside the
++  // surface's natural UV domain, the loop is closed in UV and cannot wrap a seam or pole; a point
++  // clearly outside its UV box then has winding number 0 -> OUTSIDE.  Enabled by env SMLIB_FAST_LOOP.
++  {
++    static const bool sbFastLoop = (getenv("SMLIB_FAST_LOOP") != NULL);
++    if ( sbFastLoop )
++      {
++        SmExtent3d sLoopBox;
++        bool bBoxOk = true;
++        for ( ULONG kk = 0; kk < lNumEUs; kk++ )
++          {
++            SmCurve *pUVc = NULL;
++            if ( apEUs[kk]->GetOrCreateUVTrimCurve( pUVc ) != SM_SUCCESS || pUVc == NULL )
++              { bBoxOk = false; break; }
++            SmExtent3d sBox;
++            if ( pUVc->CalculateBoundingBox( apEUs[kk]->GetEdge()->GetInterval(), &sBox ) != SM_SUCCESS )
++              { bBoxOk = false; break; }
++            sLoopBox.AddPoint3d( sBox.GetMin() );
++            sLoopBox.AddPoint3d( sBox.GetMax() );
++          }
++        if ( bBoxOk )
++          {
++            const double dSize   = smos_Max( sLoopBox.XLength(), sLoopBox.YLength() );
++            const double dMargin = 0.05 * dSize + 100.0 * dTolUV;
++            const SmPoint2d sDomMin = sSrfUVDomain.GetMin();
++            const SmPoint2d sDomMax = sSrfUVDomain.GetMax();
++            const bool bStrictlyInside =
++                 sLoopBox.GetMin(0) > sDomMin.x + dMargin && sLoopBox.GetMax(0) < sDomMax.x - dMargin
++              && sLoopBox.GetMin(1) > sDomMin.y + dMargin && sLoopBox.GetMax(1) < sDomMax.y - dMargin;
++            if ( bStrictlyInside
++              && (   crUVPoint.x < sLoopBox.GetMin(0) - dMargin || crUVPoint.x > sLoopBox.GetMax(0) + dMargin
++                  || crUVPoint.y < sLoopBox.GetMin(1) - dMargin || crUVPoint.y > sLoopBox.GetMax(1) + dMargin ) )
++              { return SM_POC_OUTSIDE; }
++          }
++      }
++  }
++
+   // Method: Winding algorithm: step along each Edgeuse in uv space,
+   // checking which quadrant each sample point is in relative to the test point,
+   // and accumulating the changes in quadrant number.  If the test point
+--- a/source/SMLib/src/SmTopologyIntersector.cpp	2026-10-14 18:14:00.591575853 +0200
++++ b/source/SMLib/src/SmTopologyIntersector.cpp	2026-10-14 23:28:01.461953508 +0200
+@@ -1733,6 +1733,22 @@
+       });
+ #endif // SM_USE_TBB
+ 
++  // EXPERIMENT (profiling study, not upstream): broad-phase face-pair rejection.
++  // Face/face pairs whose (conservative) 3D boxes are disjoint cannot intersect; skip them before the
++  // surface coincidence check and FaceIntersect.  Enabled by env SMLIB_FAST_PAIRS.
++  static const bool sbFastPairs = (getenv("SMLIB_FAST_PAIRS") != NULL);
++  std::vector<SmExtent3d> sFastBox1, sFastBox2;
++  std::vector<char>       sFastOk1,  sFastOk2;
++  if ( sbFastPairs )
++    {
++      sFastBox1.resize(lNumFaces1); sFastOk1.assign(lNumFaces1, 0);
++      sFastBox2.resize(lNumFaces2); sFastOk2.assign(lNumFaces2, 0);
++      for ( ULONG fi = 0; fi < lNumFaces1; fi++ )
++        { sFastOk1[fi] = (sFaces1[fi]->CalculateBoundingBox(sFastBox1[fi], FALSE) == SM_SUCCESS) ? 1 : 0; }
++      for ( ULONG fj = 0; fj < lNumFaces2; fj++ )
++        { sFastOk2[fj] = (sFaces2[fj]->CalculateBoundingBox(sFastBox2[fj], FALSE) == SM_SUCCESS) ? 1 : 0; }
++    }
++
+   // for every m_pBrep/m_pOther face pair - find and store coincidences and XSections
+   for(ii=0;ii<lNumFaces1;ii++)
+     {
+@@ -1743,6 +1759,13 @@
+         {
+           SmFace *pF2 = sFaces2[jj];
+ 
++          if ( sbFastPairs && sFastOk1[ii] && sFastOk2[jj] )
++            {
++              const double dPad = 10.0 * smos_Max( this->GetThisApproxTol3d(), 1.0e-6 );
++              if ( sFastBox1[ii].AreDisjoint( sFastBox2[jj], dPad ) )
++                { continue; }
++            }
++
+ #ifdef SM_DEBUG_CODE
+           if ( bDebugMe ) 
+             {

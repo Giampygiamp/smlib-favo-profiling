@@ -1,0 +1,10 @@
+SRC=$(HOME)/usd-brep/source/SMLib
+OBJ=obj
+CXXFLAGS=-std=c++17 -O2 -g -fno-omit-frame-pointer -fPIC -DNDEBUG -DNOMINMAX -DSM_GRAPHICS_CALLBACKS=1 -D_GLIBCXX_USE_CXX11_ABI=1 -I$(SRC)/inc -w
+SRCS=$(wildcard $(SRC)/src/*.cpp)
+OBJS=$(patsubst $(SRC)/src/%.cpp,$(OBJ)/%.o,$(SRCS))
+all: libSMLib.so
+libSMLib.so: $(OBJS)
+	g++ -shared -o $@ $(OBJS) -ltbbmalloc -ltbb
+$(OBJ)/%.o: $(SRC)/src/%.cpp
+	g++ $(CXXFLAGS) -c $< -o $@

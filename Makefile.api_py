@@ -1,0 +1,18 @@
+ROOT=$(HOME)/usd-brep/source
+PYINC=-I/usr/include/python3.13 -I/usr/local/lib/python3.13/dist-packages/pybind11/include
+COMMON=-std=c++17 -O2 -g -fno-omit-frame-pointer -fPIC -DNDEBUG -DNOMINMAX -DSM_GRAPHICS_CALLBACKS=1 -D_GLIBCXX_USE_CXX11_ABI=1 -w -I$(ROOT)/SMLib/inc
+API_SRCS=$(wildcard $(ROOT)/SM_API/src/*.cpp)
+API_OBJS=$(patsubst $(ROOT)/SM_API/src/%.cpp,objapi/%.o,$(API_SRCS))
+PY_SRCS=$(filter-out %SmPyUsd.cpp,$(wildcard $(ROOT)/SmPyLib/src/*.cpp))
+PY_OBJS=$(patsubst $(ROOT)/SmPyLib/src/%.cpp,objpy/%.o,$(PY_SRCS)) objpy/usd_stub.o
+all: libSM_API.so _omni_solid.cpython-313-x86_64-linux-gnu.so
+libSM_API.so: $(API_OBJS)
+	g++ -shared -o $@ $(API_OBJS) -L. -lSMLib -Wl,-rpath,\$$ORIGIN
+objapi/%.o: $(ROOT)/SM_API/src/%.cpp
+	g++ $(COMMON) -DSM_API_EXPORTS -include SmApiGeneral.h -I$(ROOT)/SM_API/inc -c $< -o $@
+_omni_solid.cpython-313-x86_64-linux-gnu.so: $(PY_OBJS) libSM_API.so
+	g++ -shared -o $@ $(PY_OBJS) -L. -lSM_API -lSMLib -Wl,-rpath,\$$ORIGIN
+objpy/usd_stub.o: usd_stub.cpp
+	g++ $(COMMON) $(PYINC) -c $< -o $@
+objpy/%.o: $(ROOT)/SmPyLib/src/%.cpp
+	g++ $(COMMON) $(PYINC) -fvisibility=hidden -include SmApiGeneral.h -I$(ROOT)/SM_API/inc -I$(ROOT)/SM_API_USD/inc -I$(ROOT)/BREP_SM_USD/inc -I$(ROOT)/BREP_USD_DATA/inc -c $< -o $@

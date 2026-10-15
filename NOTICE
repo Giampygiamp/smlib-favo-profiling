@@ -1,0 +1,21 @@
+SMLib profiling study - notice
+
+This repository contains no complete copy of the SMLib / USD BRep sources. It contains:
+  - smlib_fast_experiment.patch, a modification (a patch) of two files of
+      NVIDIA-Omniverse/usd-brep 1.0.0:
+        source/SMLib/src/SmLoop.cpp
+        source/SMLib/src/SmTopologyIntersector.cpp
+    The hunks carry the comment "EXPERIMENT (profiling study, not upstream)" and are
+    clearly marked as changes made by the author of this repository.
+  - build scripts, test scripts and measurement results written by the author.
+
+The patched files are derived from:
+  USD BRep, Copyright (c) 2020-2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+  Licensed under the Apache License, Version 2.0 (see LICENSE).
+  https://github.com/NVIDIA-Omniverse/usd-brep
+
+This is an independent, unofficial study. It is not affiliated with, endorsed by or
+sponsored by NVIDIA. "NVIDIA" and related names are trademarks of their owners.
+
+Modifications and original scripts in this repository: Copyright (c) 2026 Giampiero Partenzi,
+licensed under the Apache License, Version 2.0.
